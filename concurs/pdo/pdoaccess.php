@@ -1,15 +1,15 @@
 
 <?php 
 
-include "gos";
-include "fase";
+//include_once "../moduls/gos.php";
+//include "../moduls/fase.php";
 
 function getConnection(){
     try{
         $hostname = "localhost";
         $dbname = "concurs";
-        $username = "dwes-user";
-        $pw = "dwes-pass";
+        $username = "osama";
+        $pw = "osama";
         $dbh = new PDO("mysql:host=$hostname;dbname=$dbname;" , "$username" , "$pw");
     } catch(PDOException $ex){
         echo "Error al fer la connexió amb la base de dades: ". $ex->getMessage();
@@ -21,6 +21,7 @@ function getConnection(){
 
 /* Gestions taula gos */
 function obtenirGossosConcurs(){
+
 
     $dbh = getConnection();
 
@@ -132,7 +133,39 @@ function obtenirDatesLimit(string $fase): bool{
 
 }
 
+function obtenirDatesActuals(string $fase): bool{
 
+    $dbh = getConnection();
+
+    try{
+
+        $stmt = $dbh->prepare("select iniciActual , finalActual from fase where fase = ?");
+        $stmt->execute([$fase]);
+        return $stmt->fetchAll();
+    }catch(PDOException $ex){
+        echo "Error canviar final de fase a base de dades: ". $ex->getMessage();
+    }
+
+}
+
+function obtenirFasePerData($date){
+
+    $dbh = getConnection();
+
+    try{
+
+        $stmt = $dbh->prepare("select nom from fase where iniciActual <= ? AND finalActual >= ?");
+        $stmt->execute([$date , $date]);
+        $fase = $stmt->fetch();
+        if(!$fase)
+            return false;
+        else
+            return $fase["nom"];
+    }catch(PDOException $ex){
+        echo "Error obtenir fase per data a base de dades: ". $ex->getMessage();
+    }
+
+}
 
 
 /* Gestions taula fase_x_gos */
@@ -179,12 +212,29 @@ function obtenirDatesLimit(string $fase): bool{
 
         try{
     
-            $stmt = $dbh->prepare("update fase_x_gos set vots = ? where fase = '?' and gos = '?';");
+            $stmt = $dbh->prepare("update fase_x_gos set vots = ? where fase = ? and gos = ?;");
             $stmt->execute([$vots , $fase , $gos]);
             return true;
         }catch(PDOException $ex){
             echo "Error al actualitzar vots a base de dades: ". $ex->getMessage();
         }
+
+    }
+
+    function obtenirVotsGos(string $fase , string $gos){
+
+        $dbh = getConnection();
+
+        try{
+    
+            $stmt = $dbh->prepare("select vots from fase_x_gos where fase = ? and gos = ?;");
+            $stmt->execute([$fase , $gos]);
+            $vots = $stmt->fetch();
+            return $vots["vots"];
+        }catch(PDOException $ex){
+            echo "Error al obtenir vots a base de dades: ". $ex->getMessage();
+        }
+
 
     }
 
@@ -198,11 +248,11 @@ function obtenirDatesLimit(string $fase): bool{
 
         try{
     
-            $stmt = $dbh->prepare("insert into usuaris values ('?' , '?')");
-            $stmt->execute([$nom , $passwd]);
+            $stmt = $dbh->prepare("insert into usuaris values (? , ?)");
+            $stmt->execute([$nom , hash("md5" , $passwd)]);
             return true;
         }catch(PDOException $ex){
-            echo "Error al actualitzar vots a base de dades: ". $ex->getMessage();
+            echo "Error al afegir usuari a base de dades: ". $ex->getMessage();
         }
     }
 
@@ -211,8 +261,8 @@ function obtenirDatesLimit(string $fase): bool{
 
         try{
     
-            $stmt = $dbh->prepare("select * from usuaris where nom = ? AND password = ?;");
-            $stmt->execute([$nom , $passwd]);
+            $stmt = $dbh->prepare("select * from usuaris where nom = ? AND passwrd = ?;");
+            $stmt->execute([$nom , hash('md5',$passwd)]);
             $usuari = $stmt->fetchAll();
             return (count($usuari) == 0)?  false :  true;
         }catch(PDOException $ex){
@@ -220,4 +270,53 @@ function obtenirDatesLimit(string $fase): bool{
         }
         
     }
+
+
+/* Gestio taula votacions usuari*/
+
+    function obtenirVotUsuari($usuari , $fase){
+
+        $dbh = getConnection();
+
+        try{
+    
+            $stmt = $dbh->prepare("select gos from usuari_x_fase where usuari = ? AND fase = ?;");
+            $stmt->execute([$usuari , $fase]);
+            $gosVotat = $stmt->fetchAll();
+            return $gosVotat;
+        }catch(PDOException $ex){
+            echo "Error al obtenir vot usuari a base de dades: ". $ex->getMessage();
+        }
+
+    
+    }
+
+    function canviarVotUsuari($usuari , $fase , $gos){
+
+        $dbh = getConnection();
+
+        try{
+            $stmt = $dbh->prepare("update usuari_x_fase set gos = ? where fase = ? and usuari = ? ;");
+            $stmt->execute([$gos , $fase, $usuari]);
+            $gosVotat = $stmt->fetchAll();
+            return $gosVotat;
+        }catch(PDOException $ex){
+            echo "Error al canviar vot a base de dades: ". $ex->getMessage();
+        }
+    }
+
+    
+    function nouVotUsuari($usuari , $fase , $gos){
+
+        $dbh = getConnection();
+
+        try{
+            $stmt = $dbh->prepare("insert into usuari_x_fase values (? , ? , ?) ");
+            $stmt->execute([$fase,$gos ,$usuari]);
+            return true;
+        }catch(PDOException $ex){
+            echo "Error al afegir nou vot a base de dades: ". $ex->getMessage();
+        }
+    }
+
 ?>

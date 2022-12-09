@@ -1,3 +1,17 @@
+<?php
+    include "helper.php";
+    session_start();
+
+    if (!isset($_SESSION["usuari"])){
+        header("Location: http://localhost/entornservidor/concurs/login/login.php");
+    } elseif( time() - $_SESSION["login_time_stamp"] > 60 ) {
+        header("Location: http://localhost/entornservidor/concurs/login/login.php");
+    }
+
+    // calcular per dies la fase actual, si no estas dins una fase no deixa votar
+    $fase = obtenirFaseActual();
+?>
+
 <!DOCTYPE html>
 <html lang="ca">
 <head>
@@ -8,12 +22,41 @@
 </head>
 <body>
 <div class="wrapper">
-    <header>Votació popular del Concurs Internacional de Gossos d'Atura 2023- FASE <span> 1 </span></header>
+    <header> Votació popular del Concurs Internacional de Gossos d'Atura 2023- 
+    <?php 
+
+    if(!$fase){
+        echo "No hi ha cap fase activa";
+        $_SESSION["Fase"] = "inactiva";
+    }else{
+        echo $fase;
+        $_SESSION["Fase"] = $fase;
+    }
+    ?> 
+
+
+
+    </header>
     <p class="info"> Podeu votar fins el dia 01/02/2023</p>
 
-    <p class="warning"> Ja has votat al gos MUSCLO. Es modificarà la teva resposta</p>
+    <p class="warning">
+    <?php      
+    if(is_string($fase)){
+        $gos = votFaseActual($_SESSION["usuari"], $fase);
+        $_SESSION["votActual"] =  $gos;
+        
+        if(!is_string($gos)){
+            echo "Encara no has votat";
+            $_SESSION["votActual"] = 'nou';
+        }else
+            echo "Ja has votat al gos ". $gos . " Es modificarà la teva resposta";
+    } else
+        echo "No es pot votar";
+        
+    ?>
+    </p>
     <div class="poll-area">
-        <form>
+        <form action="process.php" method="post">
         <input type="checkbox" name="poll" id="opt-1">
         <input type="checkbox" name="poll" id="opt-2">
         <input type="checkbox" name="poll" id="opt-3">
@@ -23,6 +66,7 @@
         <input type="checkbox" name="poll" id="opt-7">
         <input type="checkbox" name="poll" id="opt-8">
         <input type="checkbox" name="poll" id="opt-9">
+        <input type="text" name="seleccio" hidden>
         <label for="opt-1" class="opt-1">
             <div class="row">
                 <div class="column">
@@ -129,4 +173,31 @@
 </div>
 
 </body>
+
+    <script>
+
+        window.onload = carregarBotons();
+
+
+        function carregarBotons(){
+
+            let eleccions = document.getElementsByTagName("label");
+
+            for (let i = 0; i < eleccions.length ; i++) {
+                eleccions[i].addEventListener("click", function(){
+                    
+                    let inputSeleccio = document.getElementsByName("seleccio")[0];
+                    let opcioNum = parseInt(this.className.substr(4 ,1));
+                    let spanText = document.getElementsByClassName("text")[opcioNum -1];
+                    inputSeleccio.value = spanText.innerHTML;
+                    document.getElementsByTagName("form")[0].submit();
+                })
+            }
+
+
+        }
+        
+    </script>
+
+
 </html>
