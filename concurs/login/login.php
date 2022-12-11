@@ -22,6 +22,7 @@
             <input type="hidden" name="method" value="signup"/>
             <input type="text" name="nom" placeholder="Nom usuari"/>
             <input type="password" name="password" placeholder="Contrasenya"/>
+            <input type="text" name="tipus" value="basic" hidden/>
             <button>Registra't</button>
         </form>
     </div>

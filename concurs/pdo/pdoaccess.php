@@ -1,8 +1,9 @@
 
 <?php 
 
-//include_once "../moduls/gos.php";
-//include "../moduls/fase.php";
+require_once __DIR__ . "/../moduls/gos.php";
+require_once __DIR__ . "/../moduls/fase.php";
+
 
 function getConnection(){
     try{
@@ -30,7 +31,7 @@ function obtenirGossosConcurs(){
         $stmt->execute();
         $gossos = [];
         foreach ($stmt as $fila) {
-            $gos = new Gos($fila["nom"],$fila["amo"],$fila["raça"],$fila["imatge_url"]);
+            $gos = new Gos($fila["nom"],$fila["amo"],$fila["raça"],$fila["imatgeUrl"]);
             $gossos[] = $gos;
         }
         return $gossos;
@@ -41,14 +42,34 @@ function obtenirGossosConcurs(){
 
 }
 
+function eliminarDadesGos($nom){
+
+    $dbh = getConnection();
+
+    try{
+
+        $stmt = $dbh->prepare("delete from fase_x_gos where gos = ? ;");
+        $stmt->execute([$nom]);
+        return true;
+    }catch(PDOException $ex){
+        echo "Error al eliminar gos a base de dades: ". $ex->getMessage();
+    }
+
+
+
+
+}
+
 
 function eliminarGos($nom){
 
     $dbh = getConnection();
 
     try{
+
+        eliminarDadesGos($nom);
         $stmt = $dbh->prepare("delete from gos where nom = ? ;");
-        $stmt->execute($nom);
+        $stmt->execute([$nom]);
         return true;
     }catch(PDOException $ex){
         echo "Error al eliminar gos a base de dades: ". $ex->getMessage();
@@ -70,15 +91,18 @@ function afegirGos(Gos $gos){
  }
 }
 
-function obtenirGos(string $gos){
+function obtenirGos(string $nomGos){
     
     $dbh = getConnection();
 
     try{
 
         $stmt = $dbh->prepare("select * from gos where nom = ?");
-        $stmt->execute([$gos]);
-        return true;
+        $stmt->execute([$nomGos]);
+        $dades_gos = $stmt->fetch();
+        $gos = new Gos($dades_gos["nom"], $dades_gos["amo"], $dades_gos["raça"] , $dades_gos["imatgeUrl"] );
+        return $gos;
+    
     }catch(PDOException $ex){
         echo "Error al obtenir gos a base de dades: ". $ex->getMessage();
  }
@@ -88,14 +112,14 @@ function obtenirGos(string $gos){
 
 /* Gestions taula fase */
 
-function nouIniciFase(string $fase , DateTime $data): bool{
+function nouIniciFase(string $numeroFase , $data): bool{
 
     $dbh = getConnection();
 
     try{
 
-        $stmt = $dbh->prepare("update fase set inici = '?' where nom = '?' ;");
-        $stmt->execute([$data , $fase]);
+        $stmt = $dbh->prepare("update fase set iniciActual = ? where numero = ? ;");
+        $stmt->execute([$data , $numeroFase]);
         return true;
     }catch(PDOException $ex){
         echo "Error canviar inici de fase a base de dades: ". $ex->getMessage();
@@ -103,14 +127,14 @@ function nouIniciFase(string $fase , DateTime $data): bool{
 
 }
 
-function nouFinalFase(string $fase , DateTime $data): bool{
+function nouFinalFase(string $numeroFase , $data): bool{
 
     $dbh = getConnection();
 
     try{
 
-        $stmt = $dbh->prepare("update fase set final = '?' where nom = '?' ;");
-        $stmt->execute([$data , $fase]);
+        $stmt = $dbh->prepare("update fase set finalActual = ? where numero = ? ;");
+        $stmt->execute([$data , $numeroFase]);
         return true;
     }catch(PDOException $ex){
         echo "Error canviar final de fase a base de dades: ". $ex->getMessage();
@@ -118,17 +142,18 @@ function nouFinalFase(string $fase , DateTime $data): bool{
 
 }
 
-function obtenirDatesLimit(string $fase): bool{
+function obtenirDatesLimit(string $numero){
 
     $dbh = getConnection();
 
     try{
 
-        $stmt = $dbh->prepare("select iniciMaxim , finalMaxim from fase where fase = ?");
-        $stmt->execute([$fase]);
-        return $stmt->fetchAll();
+        $stmt = $dbh->prepare("select iniciMaxim , finalMaxim from fase where numero = ?");
+        $stmt->execute([$numero]);
+        $dates = $stmt->fetch();
+        return $dates;
     }catch(PDOException $ex){
-        echo "Error canviar final de fase a base de dades: ". $ex->getMessage();
+        echo "Error obtenir dates de fase a base de dades: ". $ex->getMessage();
     }
 
 }
@@ -139,7 +164,7 @@ function obtenirDatesActuals(string $fase): bool{
 
     try{
 
-        $stmt = $dbh->prepare("select iniciActual , finalActual from fase where fase = ?");
+        $stmt = $dbh->prepare("select iniciActual , finalActual from fase where numero = ?");
         $stmt->execute([$fase]);
         return $stmt->fetchAll();
     }catch(PDOException $ex){
@@ -167,6 +192,31 @@ function obtenirFasePerData($date){
 
 }
 
+function obtenirFases(){
+
+    $dbh = getConnection();
+
+    try{
+
+        $stmt = $dbh->prepare("select * from fase");
+        $stmt->execute();
+        $fases = $stmt->fetchAll();
+        $datesFases = [];
+
+        foreach($fases as $values){
+            $datesFases[$values["numero"]]["iniciActual"] = $values["iniciActual"] ;
+            $datesFases[$values["numero"]]["finalActual"] = $values["finalActual"] ;
+        }
+
+        return $datesFases;
+
+    }catch(PDOException $ex){
+        echo "Error obtenir fase per data a base de dades: ". $ex->getMessage();
+    }
+
+
+}
+
 
 /* Gestions taula fase_x_gos */
 
@@ -177,7 +227,7 @@ function obtenirFasePerData($date){
 
         try{
     
-            $stmt = $dbh->prepare("select gos,vots from fase_x_gos where fase = '?';");
+            $stmt = $dbh->prepare("select gos,vots from fase_x_gos where fase = ?;");
             $stmt->execute([$fase]);
             foreach ($stmt as $fila) {
                 $gos_x_vots[$fila["gos"]] = $fila["vots"];
@@ -196,12 +246,28 @@ function obtenirFasePerData($date){
 
         try{
     
-            $stmt = $dbh->prepare("update fase_x_gos set vots = 0 where fase = '?';");
+            $stmt = $dbh->prepare("update fase_x_gos set vots = 0 where fase = ?;");
             $stmt->execute([$fase]);
             return true;
         }catch(PDOException $ex){
             echo "Error al borrar vots a base de dades: ". $ex->getMessage();
         }
+
+    }
+
+    function borrarTotsElsVots(){
+
+        $dbh = getConnection();
+
+        try{
+    
+            $stmt = $dbh->prepare("update fase_x_gos set vots = 0;");
+            $stmt->execute();
+            return true;
+        }catch(PDOException $ex){
+            echo "Error al borrar vots a base de dades: ". $ex->getMessage();
+        }
+
 
     }
 
@@ -242,14 +308,14 @@ function obtenirFasePerData($date){
 /* Gestio taula usuaris*/
 
 
-    function afegirUsuari(string $nom , string $passwd){
+    function afegirUsuari(string $nom , string $passwd , string $tipus){
 
         $dbh = getConnection();
 
         try{
     
-            $stmt = $dbh->prepare("insert into usuaris values (? , ?)");
-            $stmt->execute([$nom , hash("md5" , $passwd)]);
+            $stmt = $dbh->prepare("insert into usuaris values (? , ? , ?)");
+            $stmt->execute([$nom , hash("md5" , $passwd) , $tipus]);
             return true;
         }catch(PDOException $ex){
             echo "Error al afegir usuari a base de dades: ". $ex->getMessage();
@@ -263,8 +329,8 @@ function obtenirFasePerData($date){
     
             $stmt = $dbh->prepare("select * from usuaris where nom = ? AND passwrd = ?;");
             $stmt->execute([$nom , hash('md5',$passwd)]);
-            $usuari = $stmt->fetchAll();
-            return (count($usuari) == 0)?  false :  true;
+            $usuari = $stmt->fetch();
+            return (is_bool($usuari))?  false :  $usuari;
         }catch(PDOException $ex){
             echo "Error al obtenir usuari a base de dades: ". $ex->getMessage();
         }

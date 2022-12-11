@@ -1,7 +1,7 @@
 <?php 
     session_start();
 
-    include "helper.php";
+    require_once "helper.php";
     // comprovar fase
 
     switch($_SERVER["REQUEST_METHOD"]){

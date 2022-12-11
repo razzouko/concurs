@@ -10,10 +10,12 @@
 
     function treballarSignIn(){
 
-        if(obtenirUsuari($_POST["nom"], $_POST["password"])){
+        $usuari = obtenirUsuari($_POST["nom"], $_POST["password"]);
+
+        if(!is_bool($usuari)){
             $_SESSION["usuari"] = $_POST["nom"];
             $_SESSION["login_time_stamp"] = time();
-            if($_POST["nom"] == "admin" && $_POST["password"] == "admin" )
+            if($usuari["tipus"] == "admin")
                 header("Location: http://localhost/entornservidor/concurs/admin.php");
             else    
                 header("Location: http://localhost/entornservidor/concurs/index.php");
@@ -24,12 +26,17 @@
     }
 
     function treballarSignUp(){
-            if(!obtenirUsuari($_POST["nom"], $_POST["password"])){
-                afegirUsuari($_POST["nom"], $_POST["password"]);
+
+            $usuari = !obtenirUsuari($_POST["nom"], $_POST["password"]);
+
+            if(is_bool($usuari)){
+                afegirUsuari($_POST["nom"], $_POST["password"] , $_POST["tipus"]);
                 $_SESSION["usuari"] = $_POST["nom"];
                 $_SESSION["login_time_stamp"] = time();
                 header("Location: http://localhost/entornservidor/concurs/index.php");
-            }
+            }else
+                header("Location: http://localhost/entornservidor/concurs/login/login.php?error=Usuari ja existeix");
+
     }
 
 

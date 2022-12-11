@@ -1,5 +1,6 @@
 <?php
-    include "helper.php";
+    require_once "helper.php";
+    require_once "moduls/fase.php";
     session_start();
 
     if (!isset($_SESSION["usuari"])){
@@ -9,7 +10,8 @@
     }
 
     // calcular per dies la fase actual, si no estas dins una fase no deixa votar
-    $fase = obtenirFaseActual();
+    $nomFase = obtenirFaseActual();
+    
 ?>
 
 <!DOCTYPE html>
@@ -25,13 +27,17 @@
     <header> Votació popular del Concurs Internacional de Gossos d'Atura 2023- 
     <?php 
 
-    if(!$fase){
+    if(!$nomFase){
         echo "No hi ha cap fase activa";
         $_SESSION["Fase"] = "inactiva";
     }else{
-        echo $fase;
-        $_SESSION["Fase"] = $fase;
+        echo $nomFase;
+        $_SESSION["Fase"] = $nomFase;
+        $fase = new Fase($nomFase);
     }
+
+
+
     ?> 
 
 
@@ -41,8 +47,8 @@
 
     <p class="warning">
     <?php      
-    if(is_string($fase)){
-        $gos = votFaseActual($_SESSION["usuari"], $fase);
+    if(is_string($nomFase)){
+        $gos = votFaseActual($_SESSION["usuari"], $nomFase);
         $_SESSION["votActual"] =  $gos;
         
         if(!is_string($gos)){
@@ -50,12 +56,18 @@
             $_SESSION["votActual"] = 'nou';
         }else
             echo "Ja has votat al gos ". $gos . " Es modificarà la teva resposta";
-    } else
+        $hidden = false;
+
+        $gossos = $fase->obtenirGossos();
+
+
+    } else{
         echo "No es pot votar";
-        
+        $hidden = true;
+    }
     ?>
     </p>
-    <div class="poll-area">
+    <div class="poll-area" <?php echo ($hidden)? "hidden": "" ; ?>>
         <form action="process.php" method="post">
         <input type="checkbox" name="poll" id="opt-1">
         <input type="checkbox" name="poll" id="opt-2">
@@ -67,8 +79,43 @@
         <input type="checkbox" name="poll" id="opt-8">
         <input type="checkbox" name="poll" id="opt-9">
         <input type="text" name="seleccio" hidden>
-        <label for="opt-1" class="opt-1">
-            <div class="row">
+
+        <?php 
+        
+            $optNum = 1;
+
+            foreach($gossos as $nom => $vots){
+
+                $opt = "opt-" . $optNum;
+                $optNum++;
+
+                echo " <label for= " . $opt . " class= " .$opt . ">";
+                echo " <div class=row >";
+                echo " <div class='column'>";
+                echo " <div class='right' >";
+                echo " <span class='circle'></span>";
+                echo " <span class='text'>" . $nom . "</span>";
+                echo " </div>";
+                echo " <img class='dog'  alt=$nom src='img/$nom.png'>";
+                echo " </div>";
+                echo " </div>";
+                echo " </label>";
+            }
+        
+        
+        
+        
+        
+        
+        ?>
+
+
+
+
+
+        <!--
+        <label for="opt-1" class="opt-1" >
+            <div class="row" >
                 <div class="column">
                     <div class="right">
                     <span class="circle"></span>
@@ -77,7 +124,8 @@
                     <img class="dog"  alt="Musclo" src="img/g1.png">
                 </div>
             </div>
-        </label>
+        </label> 
+        
         <label for="opt-2" class="opt-2">
             <div class="row">
                 <div class="column">
@@ -166,6 +214,7 @@
                 </div>
             </div>
         </label>
+-->
         </form>
     </div>
 

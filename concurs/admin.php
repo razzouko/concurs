@@ -1,7 +1,8 @@
 <?php 
 
-    include "helper.php";
-    include "moduls/fase.php";
+    require_once "helper.php";
+    require_once "moduls/fase.php";
+
 session_start();
 
     if (!isset($_SESSION["usuari"]))
@@ -12,8 +13,8 @@ session_start();
         header("Location: http://localhost/entornservidor/concurs/index.php");
 
     $nomFase = obtenirFaseActual();
-    $faseActual = new Fase($nomFase); // mostrar gossos de la fase
-
+    $fase = new Fase("Fase 1"); // mostrar gossos de la fase
+    $fases = obtenirFases();
 ?>
 
 <!DOCTYPE html>
@@ -29,185 +30,150 @@ session_start();
     <header>ADMINISTRADOR - Concurs Internacional de Gossos d'Atura</header>
     <div class="admin">
         <div class="admin-row">
-            <h1> Resultat parcial: <?php echo $faseActual->getNom() ?> </h1>
+            <h1> Resultat parcial: <?php echo $fase->getNom() ?> </h1>
             <div class="gossos">
             <?php 
 
-            foreach($faseActual->obtenirGossos() as $gos => $vots){
-                echo "<img class='dog' alt='$gos' title='$gos $vots%' src="img/g1.png">"
+            $gossosFase = $fase->obtenirGossos();
+
+            foreach( $gossosFase as $gos => $vots){
+                echo "<img class='dog' alt='$gos' title='$gos $vots%' src=img/$gos.png>";
             }
                 
-
-
-
-
-            /*<img class="dog" alt="Jingo" title="Jingo 45%" src="img/g2.png">
-            <img class="dog" alt="Xuia" title="Xuia 4%" src="img/g3.png">
-            <img class="dog" alt="Bruc" title="Bruc 3%" src="img/g4.png">
-            <img class="dog" alt="Mango" title="Mango 13%" src="img/g5.png">
-            <img class="dog" alt="Fluski" title="Fluski 12 %" src="img/g6.png">
-            <img class="dog" alt="Fonoll" title="Fonoll 5%" src="img/g7.png">
-            <img class="dog" alt="Swing" title="Swing 2%" src="img/g8.png">
-            <img class="dog eliminat" alt="Coloma" title="Coloma 1%" src="img/g9.png">*/
-
             ?>
             </div>
         </div>
         <div class="admin-row">
+            <h1> Nou usuari: </h1>
+            <form action="admin_process.php" method="post">
+                <input type="text" name="nom" placeholder="Nom">
+                <input type="password" name="password" placeholder="Contrassenya">
+                <input type="text" name="tipus" value="admin" hidden>
+                <input type="text" name="nouUser" hidden>
+                <button>Crea usuari</button>
+                <label style="color: red;"> <?php echo (isset($_GET["errorUsuari"])) ? $_GET["errorUsuari"] :"" ;  ?> </label>
+            </form>
+        </div>
+        <div class="admin-row">
             <h1> Fases: </h1>
-            <form class="fase-row">
+            <label for="">  <?php echo (isset($_GET["errorData"])) ? $_GET["errorData"] :"" ;  ?>   </label>
+            <form class="fase-row"  action="admin_process.php" method="post"  >
                 Fase <input type="text" value="1" disabled style="width: 3em">
-                del <input type="date" placeholder="Inici">
-                al <input type="date" placeholder="Fi">
-                <input type="button" value="Modifica">
+                del <input type="date"  name="dataInici" placeholder="Inici" value=<?php echo $fases[1]["iniciActual"] ?>  >
+                al <input type="date" name="dataFi" placeholder="Fi" value=<?php echo $fases[1]["finalActual"] ?>>
+                <input type="submit" value="Modifica">
+                <input type="text" name="numeroFase" value="1" hidden>
+                <input type="text" name="novaData" hidden>
             </form>
 
-            <form class="fase-row">
+            <form class="fase-row" action="admin_process.php" method="post" >
                 Fase <input type="text" value="2" disabled style="width: 3em">
-                del <input type="date" placeholder="Inici">
-                al <input type="date" placeholder="Fi">
-                <input type="button" value="Modifica">
+                del <input type="date"  name="dataInici" placeholder="Inici" value=<?php echo $fases[2]["iniciActual"] ?>  >
+                al <input type="date" name="dataFi" placeholder="Fi" value=<?php echo $fases[2]["finalActual"] ?>>
+                <input type="text" name="novaData" hidden>
+                <input type="text" name="numeroFase" value="2" hidden>
+                <input type="submit"  value="Modifica">
             </form>
 
-            <form class="fase-row">
+            <form class="fase-row" action="admin_process.php" method="post" >
                 Fase <input type="text" value="3" disabled style="width: 3em">
-                del <input type="date" placeholder="Inici">
-                al <input type="date" placeholder="Fi">
-                <input type="button" value="Modifica">
+                del <input type="date"  name="dataInici" placeholder="Inici" value=<?php echo $fases[3]["iniciActual"] ?>  >
+                al <input type="date" name="dataFi" placeholder="Fi" value=<?php echo $fases[3]["finalActual"] ?>>
+                <input type="text" name="novaData" hidden>
+                <input type="text" name="numeroFase" value="3" hidden>
+                <input type="submit" value="Modifica">
             </form>
 
-            <form class="fase-row">
+            <form class="fase-row" action="admin_process.php" method="post" >
                 Fase <input type="text" value="4" disabled style="width: 3em">
-                del <input type="date" placeholder="Inici">
-                al <input type="date" placeholder="Fi">
-                <input type="button" value="Modifica">
+                del <input type="date"  name="dataInici" placeholder="Inici" value=<?php echo $fases[4]["iniciActual"] ?>  >
+                al <input type="date" name="dataFi"placeholder="Fi" value=<?php echo $fases[4]["finalActual"] ?>>
+                <input type="text" name="numeroFase" value="4" hidden>
+                <input type="submit" value="Modifica">       
             </form>
 
-            <form class="fase-row">
+            <form class="fase-row" action="admin_process.php" method="post" >
                 Fase <input type="text" value="5" disabled style="width: 3em">
-                del <input type="date" placeholder="Inici">
-                al <input type="date" placeholder="Fi">
-                <input type="button" value="Modifica">
+                del <input type="date"  name="dataInici" placeholder="Inici" value=<?php echo $fases[5]["iniciActual"] ?>  >
+                al <input type="date" name="dataFi" placeholder="Fi" value=<?php echo $fases[5]["finalActual"] ?>>
+                <input type="text" name="novaData" hidden>
+                <input type="text" name="numeroFase" value="5" hidden>
+                <input type="submit" value="Modifica">
             </form>
 
-            <form class="fase-row">
+            <form class="fase-row" action="admin_process.php" method="post" >
                 Fase <input type="text" value="6" disabled style="width: 3em">
-                del <input type="date" placeholder="Inici">
-                al <input type="date" placeholder="Fi">
-                <input type="button" value="Modifica">
+                del <input type="date"  name="dataInici" placeholder="Inici" value=<?php echo $fases[6]["iniciActual"] ?>  >
+                al <input type="date" name="dataFi" placeholder="Fi" value=<?php echo $fases[6]["finalActual"] ?>>
+                <input type="text" name="novaData" hidden>
+                <input type="text" name="numeroFase" value="6" hidden>
+                <input type="submit" value="Modifica">
             </form>
 
-            <form class="fase-row">
+            <form class="fase-row" action="admin_process.php" method="post" >
                 Fase <input type="text" value="7" disabled style="width: 3em">
-                del <input type="date" placeholder="Inici">
-                al <input type="date" placeholder="Fi">
-                <input type="button" value="Modifica">
+                del <input type="date"  name="dataInici" placeholder="Inici" value=<?php echo $fases[7]["iniciActual"] ?>  >
+                al <input type="date" name="dataFi" placeholder="Fi" value=<?php echo $fases[7]["finalActual"] ?>>
+                <input type="text" name="novaData" hidden>
+                <input type="text" name="numeroFase" value="7" hidden>
+                <input type="submit" value="Modifica">
             </form>
 
-            <form class="fase-row">
+            <form class="fase-row" action="admin_process.php" method="post" >
                 Fase <input type="text" value="8" disabled style="width: 3em">
-                del <input type="date" placeholder="Inici">
-                al <input type="date" placeholder="Fi">
-                <input type="button" value="Modifica">
+                del <input type="date"  name="dataInici" placeholder="Inici" value=<?php echo $fases[8]["iniciActual"] ?>  >
+                al <input type="date" name="dataFi" placeholder="Fi" value=<?php echo $fases[8]["finalActual"] ?>>
+                <input type="text" name="novaData" hidden>
+                <input type="text" name="numeroFase" value="8" hidden>
+                <input type="submit" value="Modifica">
             </form>
 
         </div>
 
         <div class="admin-row">
             <h1> Concursants: </h1>
-            <form>
-                <label>1</label>
-                <input type="text" placeholder="Nom" value="Musclo">
-                <input type="text" placeholder="Imatge" value="img/g1.png">
-                <input type="text" placeholder="Amo" value="Joan Pere Arnau">
-                <input type="text" placeholder="Raça" value="Husky Siberià">
-                <input type="button" value="Modifica">
-            </form>
 
-            <form>
-                <label>2</label>
-                <input type="text" placeholder="Nom" value="Musclo">
-                <input type="text" placeholder="Imatge" value="img/g1.png">
-                <input type="text" placeholder="Amo" value="Joan Pere Arnau">
-                <input type="text" placeholder="Raça" value="Husky Siberià">
-                <input type="button" value="Modifica">
-            </form>
-
-            <form>
-                <label>3</label>
-                <input type="text" placeholder="Nom" value="Musclo">
-                <input type="text" placeholder="Imatge" value="img/g1.png">
-                <input type="text" placeholder="Amo" value="Joan Pere Arnau">
-                <input type="text" placeholder="Raça" value="Husky Siberià">
-                <input type="button" value="Modifica">
-            </form>
-
-            <form>
-                <label>4</label>
-                <input type="text" placeholder="Nom" value="Musclo">
-                <input type="text" placeholder="Imatge" value="img/g1.png">
-                <input type="text" placeholder="Amo" value="Joan Pere Arnau">
-                <input type="text" placeholder="Raça" value="Husky Siberià">
-                <input type="button" value="Modifica">
-            </form>
-
-            <form>
-                <label>5</label>
-                <input type="text" placeholder="Nom" value="Musclo">
-                <input type="text" placeholder="Imatge" value="img/g1.png">
-                <input type="text" placeholder="Amo" value="Joan Pere Arnau">
-                <input type="text" placeholder="Raça" value="Husky Siberià">
-                <input type="button" value="Modifica">
-            </form>
-
-            <form>
-                <label>6</label>
-                <input type="text" placeholder="Nom" value="Musclo">
-                <input type="text" placeholder="Imatge" value="img/g1.png">
-                <input type="text" placeholder="Amo" value="Joan Pere Arnau">
-                <input type="text" placeholder="Raça" value="Husky Siberià">
-                <input type="button" value="Modifica">
-            </form>
-
-            <form>
-                <label>7</label>
-                <input type="text" placeholder="Nom" value="Musclo">
-                <input type="text" placeholder="Imatge" value="img/g1.png">
-                <input type="text" placeholder="Amo" value="Joan Pere Arnau">
-                <input type="text" placeholder="Raça" value="Husky Siberià">
-                <input type="button" value="Modifica">
-            </form>
-
-            <form>
-                <label>8</label>
-                <input type="text" placeholder="Nom" value="Musclo">
-                <input type="text" placeholder="Imatge" value="img/g1.png">
-                <input type="text" placeholder="Amo" value="Joan Pere Arnau">
-                <input type="text" placeholder="Raça" value="Husky Siberià">
-                <input type="button" value="Modifica">
-            </form>
-
-            <form>
-                <label>9</label>
-                <input type="text" placeholder="Nom" value="Musclo">
-                <input type="text" placeholder="Imatge" value="img/g1.png">
-                <input type="text" placeholder="Amo" value="Joan Pere Arnau">
-                <input type="text" placeholder="Raça" value="Husky Siberià">
-                <input type="button" value="Modifica">
-            </form>
+            <?php 
             
+                $totsGossos = obtenirGossosConcurs();
+            
+                for ($i=0; $i < count($totsGossos); $i++) { 
+                
+                    $nom = $totsGossos[$i]->getNom();
+                    $amo = $totsGossos[$i]->getAmo();
+                    $raça = $totsGossos[$i]->getRaça();
+
+                    echo "
+                    <form action='admin_process.php' method='post'>
+                    <label>$i</label>
+                    <input type='text' name='nom' placeholder='Nom' value='$nom'>
+                    <input type='text' name='imatge' placeholder='Imatge' value='img/$nom.png'>
+                    <input type='text' name= 'amo' placeholder='Amo' value='$amo'>
+                    <input type='text' name='raça' placeholder='Raça' value='$raça'>
+                    <input type= 'text' name='editarGos' hidden>
+                    <input type= 'text' name='nomAnterior' value='$nom' hidden>
+                    <input type='submit' value='Modifica'>
+                    </form>";
+                }
+
+            
+            
+            ?>
+
         </div>
 
         <div class="admin-row">
             <h1> Altres operacions: </h1>
-            <form>
+            <form action="admin_process.php" method="post">
                 Esborra els vots de la fase
-                <input type="number" placeholder="Fase" value="">
-                <input type="button" value="Esborra">
+                <input type="number" name="numeroFase" placeholder="Fase" value="">
+                <input type="text" name="borrarVots" hidden>
+                <input type="submit" value="Esborra">
             </form>
-            <form>
+            <form action="admin_process.php" method="post">
                 Esborra tots els vots
-                <input type="button" value="Esborra">
+                <input type="submit" value="Esborra">
+                <input type="text" name="borrarTotsElsVots" hidden>
             </form>
         </div>
     </div>

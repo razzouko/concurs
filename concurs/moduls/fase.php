@@ -1,6 +1,6 @@
 <?php 
-    include_once("gos.php");
-    include_once("../helper.php");
+    require_once("gos.php");
+    require_once __DIR__.'/../helper.php';
 
     class Fase {
 
